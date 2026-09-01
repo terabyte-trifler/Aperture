@@ -1,0 +1,22 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+
+      # These two run before anything else. A table without RLS or a leaked
+      # service-role reference must never reach a review, let alone main.
+      - name: RLS coverage
+        run: npm run check:rls
+      - name: Secret containment
+        run: npm run check:secrets
+
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
