@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { sendOtp, verifyOtp } from "@/lib/domain/actions";
 import { photo, pick } from "@/lib/content/images";
+import { isSupabaseConfigured } from "@/lib/env";
 
 /**
  * Sign in.
@@ -15,6 +16,9 @@ import { photo, pick } from "@/lib/content/images";
  * that is tested.
  */
 export default function LoginPage() {
+  // Sign-in is the one part of the product that needs a database. Without
+  // one, say so plainly rather than showing a form whose submit throws.
+  const configured = isSupabaseConfigured();
   const [phone, setPhone] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +68,21 @@ export default function LoginPage() {
               : "We will text you a code. There is no password to remember."}
           </p>
 
-          {!sent ? (
+          {!configured ? (
+            <div className="mt-10 rounded-lg border border-line bg-sand p-6">
+              <p className="font-medium text-ink">
+                Sign-in is not configured on this deployment.
+              </p>
+              <p className="mt-3 text-ink-muted">
+                The public site runs without a database, so browsing gear,
+                creators, communities and events all works. Accounts need
+                Supabase credentials, which this build was not given.
+              </p>
+              <Link href="/gear" className="btn btn-primary mt-6">
+                Browse gear instead
+              </Link>
+            </div>
+          ) : !sent ? (
             <form action={onSend} className="mt-10 space-y-5">
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-ink">
@@ -140,10 +158,12 @@ export default function LoginPage() {
             </form>
           )}
 
-          <p className="mt-10 border-t border-line pt-6 text-sm text-ink-faint">
-            By continuing you agree to our terms and privacy policy. We only
-            ever text you about your own bookings.
-          </p>
+          {configured && (
+            <p className="mt-10 border-t border-line pt-6 text-sm text-ink-faint">
+              By continuing you agree to our terms and privacy policy. We only
+              ever text you about your own bookings.
+            </p>
+          )}
         </div>
 
         <Link href="/" className="link-underline self-start text-sm text-ink-muted">

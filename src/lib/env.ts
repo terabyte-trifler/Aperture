@@ -41,6 +41,20 @@ export function supabaseUrl(): string {
   );
 }
 
+/**
+ * Whether Supabase credentials are present, without throwing.
+ *
+ * Callers that run on every request — the middleware above all — must be able
+ * to ask this and degrade, rather than throwing and turning a missing optional
+ * integration into a site-wide 500.
+ */
+export function isSupabaseConfigured(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim(),
+  );
+}
+
 /** Throws only when a Supabase client is actually built. */
 export function supabaseAnonKey(): string {
   return required(
