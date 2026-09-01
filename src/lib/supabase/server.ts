@@ -2,7 +2,7 @@ import "server-only";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/database.types";
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
+import { supabaseAnonKey, supabaseUrl } from "@/lib/env";
 
 /**
  * SSR client. Anon key + the user's session cookie, so RLS applies exactly
@@ -13,8 +13,8 @@ export async function createClient() {
   const store = await cookies();
 
   return createServerClient<Database>(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY,
+    supabaseUrl(),
+    supabaseAnonKey(),
     {
       cookies: {
         getAll: () => store.getAll(),

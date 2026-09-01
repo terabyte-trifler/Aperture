@@ -1,6 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
+import { supabaseAnonKey, supabaseUrl } from "@/lib/env";
 
 const PROTECTED = ["/dashboard", "/onboarding", "/settings", "/inbox", "/owner"];
 const ADMIN = "/admin";
@@ -9,8 +9,8 @@ export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY,
+    supabaseUrl(),
+    supabaseAnonKey(),
     {
       cookies: {
         getAll: () => request.cookies.getAll(),
