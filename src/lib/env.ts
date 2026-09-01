@@ -49,8 +49,48 @@ export function supabaseAnonKey(): string {
   );
 }
 
-/** Safe at module load: both of these have defaults. */
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const DEFAULT_SITE_URL = "http://localhost:3000";
 
-export const LAUNCH_CITY = process.env.NEXT_PUBLIC_LAUNCH_CITY ?? "Pune";
+/**
+ * Resolve the canonical origin for metadataBase and Open Graph URLs.
+ *
+ * `??` is not enough here. A host that declares NEXT_PUBLIC_SITE_URL but
+ * leaves the value blank hands us an empty string — which `??` does not catch,
+ * because the variable is defined — and `new URL('')` throws `ERR_INVALID_URL`
+ * during page-data collection, taking the whole build down.
+ *
+ * So: try each candidate in turn, skip anything empty once trimmed, add a
+ * scheme to a bare host (Vercel supplies `example.vercel.app`, not a URL), and
+ * fall back rather than throwing if none of them parse.
+ */
+function resolveSiteUrl(): string {
+  const candidates = [
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.NEXT_PUBLIC_VERCEL_URL,
+    process.env.VERCEL_URL,
+    DEFAULT_SITE_URL,
+  ];
+
+  for (const candidate of candidates) {
+    const trimmed = candidate?.trim();
+    if (!trimmed) continue;
+
+    const withScheme = /^https?:\/\//i.test(trimmed)
+      ? trimmed
+      : `https://${trimmed}`;
+
+    try {
+      return new URL(withScheme).origin;
+    } catch {
+      // Unparseable — try the next candidate.
+    }
+  }
+
+  return DEFAULT_SITE_URL;
+}
+
+export const SITE_URL = resolveSiteUrl();
+
+/** Blank-but-declared would otherwise render "Live in ." */
+export const LAUNCH_CITY =
+  process.env.NEXT_PUBLIC_LAUNCH_CITY?.trim() || "Pune";
